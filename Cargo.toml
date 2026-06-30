@@ -10,7 +10,10 @@ readme = "README.md"
 [dependencies]
 # Pin to the RMK revision that matches the embassy 0.10 / nrf-sdc stack below (same as upstream `nrf52840_ble_split` example).
 # Keep RMK default features enabled (same as before the Vial experiment). Vial unlock is handled with `[host] unlock_keys` in keyboard.toml.
-rmk = { git = "https://github.com/HaoboGu/rmk", rev = "b98204928e9a8532064ce99add1f6c4c554e08c9", features = [
+# For local firmware development, point at a patched checkout.
+# Before CI / publishing, switch back to:
+#   rmk = { git = "https://github.com/HaoboGu/rmk", rev = "b98204928e9a8532064ce99add1f6c4c554e08c9", features = [...] }
+rmk = { path = "rmk/rmk", features = [
     "nrf52840_ble",
     "split",
     "async_matrix",
@@ -52,6 +55,8 @@ defmt-rtt = "1.0"
 panic-probe = { version = "1.0", features = ["print-defmt"] }
 static_cell = "2"
 
+embedded-graphics = "0.8"
+heapless = "0.9"
 rand = { version = "0.8.4", default-features = false }
 rand_core = { version = "0.6" }
 rand_chacha = { version = "0.3", default-features = false }
