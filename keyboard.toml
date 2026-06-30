@@ -1,0 +1,320 @@
+#╭─╮╭─╮╭─╮╭╮╭┬─╮ ┐ ╭─┬─╮   ┬
+#│  │ │├┬╯│││├┤  ├──╮│ │ ┬ │
+#╰─╯╰─╯╯╰─╯╰╯╰─╯ ╰──╯┴ ╰─┴─╯
+
+[keyboard]
+name = "Corne BTW"
+product_name = "Corne But in RMK"
+vendor_id = 0x6769
+product_id = 0x420f
+manufacturer = "DFLTPLYR"
+chip = "nrf52840"
+
+[layout]
+rows = 4
+cols = 12
+layers = 4
+keymap = [
+  [
+    [
+      "TH(Escape, Tab)",
+      "Q",
+      "W",
+      "E",
+      "R",
+      "T",
+      "Y",
+      "U",
+      "I",
+      "O",
+      "P",
+      "Backspace",
+    ],
+    [
+      "LShift",
+      "A",
+      "S",
+      "D",
+      "F",
+      "G",
+      "H",
+      "J",
+      "K",
+      "L",
+      "Semicolon",
+      "Quote",
+    ],
+    [
+      "LCtrl",
+      "Z",
+      "X",
+      "C",
+      "V",
+      "B",
+      "N",
+      "M",
+      "Comma",
+      "Dot",
+      "Slash",
+      "Escape",
+    ],
+    [
+      "_",
+      "_",
+      "_",
+      "MO(1)",
+      "LGui",
+      "Space",
+      "Enter",
+      "MO(2)",
+      "RAlt",
+      "_",
+      "_",
+      "_",
+    ],
+  ],
+  [
+    [
+      "_",
+      "Kc1",
+      "Kc2",
+      "Kc3",
+      "Kc4",
+      "Kc5",
+      "Kc6",
+      "Kc7",
+      "Kc8",
+      "Kc9",
+      "Kc0",
+      "Backspace",
+    ],
+    [
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "Left",
+      "Down",
+      "Up",
+      "Right",
+      "_",
+      "_",
+    ],
+    [
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+    ],
+    [
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+    ],
+  ],
+  [
+    [
+      "_",
+      "F1",
+      "F2",
+      "F3",
+      "F4",
+      "F5",
+      "F6",
+      "F7",
+      "F8",
+      "F9",
+      "F10",
+      "Backspace",
+    ],
+    [
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "Minus",
+      "Equal",
+      "LeftBracket",
+      "RightBracket",
+      "Backslash",
+      "Grave",
+    ],
+    [
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "SHIFTED(Minus)",
+      "SHIFTED(Equal)",
+      "SHIFTED(LeftBracket)",
+      "SHIFTED(RightBracket)",
+      "SHIFTED(Backslash)",
+      "SHIFTED(Grave)",
+    ],
+    [
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+    ],
+  ],
+  [
+    [
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+    ],
+    [
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+    ],
+    [
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+    ],
+    [
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+      "_",
+    ],
+  ],
+]
+
+[host]
+vial_enabled = true
+unlock_keys = [[0, 0], [0, 1]]
+
+[storage]
+# clear_storage = true
+
+[ble]
+enabled = true
+battery_adc_pin = "vddh"
+adc_divider_measured = 2000
+adc_divider_total = 2806
+
+[split]
+connection = "ble"
+
+[split.central]
+rows = 4
+cols = 6
+row_offset = 0
+col_offset = 0
+ble_addr = [0x18, 0xe2, 0x21, 0x80, 0xc0, 0xc7]
+battery_adc_pin = "vddh"
+adc_divider_measured = 2000
+adc_divider_total = 2806
+
+[split.central.display]
+driver = "ssd1306"
+size = "128x32"
+rotation = 90
+renderer = "OledRenderer"
+
+[split.central.display.protocol.i2c]
+instance = "TWISPI0"
+scl = "P0_20"
+sda = "P0_17"
+address = 0x3C
+
+[split.central.matrix]
+matrix_type = "normal"
+row_pins = ["P0_22", "P0_24", "P1_00", "P0_11"]
+col_pins = ["P0_31", "P0_29", "P0_02", "P1_15", "P1_13", "P1_11"]
+
+[[split.peripheral]]
+rows = 4
+cols = 6
+row_offset = 0
+col_offset = 6
+ble_addr = [0x7e, 0xfe, 0x73, 0x9e, 0x66, 0xe3]
+battery_adc_pin = "vddh"
+adc_divider_measured = 2000
+adc_divider_total = 2806
+
+[split.peripheral.display]
+driver = "ssd1306"
+size = "128x32"
+rotation = 90
+renderer = "OledRenderer"
+
+[split.peripheral.display.protocol.i2c]
+instance = "TWISPI0"
+scl = "P0_20"
+sda = "P0_17"
+address = 0x3C
+
+[split.peripheral.matrix]
+matrix_type = "normal"
+row_pins = ["P0_22", "P0_24", "P1_00", "P0_11"]
+col_pins = ["P1_11", "P1_13", "P1_15", "P0_02", "P0_29", "P0_31"]
