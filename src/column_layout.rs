@@ -20,22 +20,72 @@ const MOD_GAP: i32 = 3;
 const LOCK_DOT_DIAMETER: u32 = 4;
 const LOCK_DOT_SPACING: i32 = LOCK_DOT_DIAMETER as i32 + 2;
 
+#[derive(Clone, Copy)]
+enum Orientation {
+    Landscape,
+    Portrait,
+}
+
+struct Layout {
+    orientation: Orientation,
+    w: i32,
+    h: i32,
+    zones: [i32; 5],
+}
+
+impl Layout {
+    fn from_display<D: DrawTarget>(display: &D) -> Self {
+        let bbox = display.bounding_box();
+        let w = bbox.size.width as i32;
+        let h = bbox.size.height as i32;
+
+        let (orientation, zones) = if w >= h {
+            let z = h / 3;
+            (Orientation::Landscape, [0, z, 2 * z, h, h])
+        } else {
+            let z = h / 4;
+            (Orientation::Portrait, [0, z, 2 * z, 3 * z, h])
+        };
+
+        Self {
+            orientation,
+            w,
+            h,
+            zones,
+        }
+    }
+
+    fn zone_center_y(&self, z: usize) -> i32 {
+        let top = self.zones[z];
+        let bot = self.zones[z + 1];
+        top + (bot - top) / 2
+    }
+
+    fn zone_top(&self, z: usize) -> i32 {
+        self.zones[z]
+    }
+
+    fn zone_height(&self, z: usize) -> i32 {
+        self.zones[z + 1] - self.zones[z]
+    }
+
+    fn center_x(&self, char_count: usize) -> i32 {
+        ((self.w - char_count as i32 * 5) / 2).max(0)
+    }
+}
+
 /// Column widths for the 32px-wide display.
 const COL_W0: i32 = 8;
 const COL_W1: i32 = 16;
 const COL_W2: i32 = 8;
 
-/// Which direction columns are laid out.
 #[allow(dead_code)]
 #[derive(Clone, Copy)]
 pub enum LayoutDirection {
-    /// header | content | footer
     LeftToRight,
-    /// footer | content | header
     RightToLeft,
 }
 
-/// Per-side display configuration.
 #[derive(Clone, Copy)]
 pub struct SideConfig {
     pub direction: LayoutDirection,
@@ -67,9 +117,6 @@ impl SideConfig {
     }
 }
 
-/// Three-column vertical layout: header (8px) | content (16px) | footer (8px).
-///
-/// Designed for a 128×32 OLED with 90° rotation (effective 32×128 portrait).
 pub struct ColumnLayout {
     config: SideConfig,
 }
@@ -90,11 +137,11 @@ impl Default for ColumnLayout {
     }
 }
 
-/// Central-side defaults: left-to-right, all show toggles on.
+/// Central-side defaults: left-to-right.
 #[allow(dead_code)]
 pub struct CentralLayout(ColumnLayout);
 
-/// Peripheral-side defaults: right-to-left, selective toggles.
+/// Peripheral-side defaults: right-to-left.
 #[allow(dead_code)]
 pub struct PeripheralLayout(ColumnLayout);
 
@@ -136,9 +183,10 @@ impl DisplayRenderer<BinaryColor> for ColumnLayout {
         if ctx.sleeping {
             return;
         }
-        draw_header_col(ctx, display, &self.config);
-        draw_content_col(ctx, display, &self.config);
-        draw_footer_col(ctx, display, &self.config);
+        let layout = Layout::from_display(display);
+        draw_header_col(ctx, display, &self.config, &layout);
+        draw_content_col(ctx, display, &self.config, &layout);
+        draw_footer_col(ctx, display, &self.config, &layout);
     }
 }
 
@@ -154,26 +202,44 @@ impl DisplayRenderer<BinaryColor> for PeripheralLayout {
     }
 }
 
-/// Header column (8px): layer number and WPM.
-fn draw_header_col<D: DrawTarget<Color = BinaryColor>>(ctx: &RenderContext, display: &mut D, config: &SideConfig) {
+// -- Drawing functions --
+
+fn draw_header_col<D: DrawTarget<Color = BinaryColor>>(
+    ctx: &RenderContext,
+    display: &mut D,
+    config: &SideConfig,
+    layout: &Layout,
+) {
     if config.show_layer {
         let mut buf: heapless::String<4> = heapless::String::new();
         write!(buf, "{}", ctx.layer).ok();
-        Text::new(&buf, Point::new(config.col_header_x() + 1, 10), FONT_STYLE)
-            .draw(display)
-            .ok();
+        Text::new(
+            &buf,
+            Point::new(layout.center_x(1), layout.zone_center_y(0) - 4),
+            FONT_STYLE,
+        )
+        .draw(display)
+        .ok();
     }
     if config.show_wpm {
         let mut wpm_buf: heapless::String<4> = heapless::String::new();
         write!(wpm_buf, "{:03}", ctx.wpm).ok();
-        Text::new(&wpm_buf, Point::new(config.col_header_x(), 40), FONT_STYLE)
-            .draw(display)
-            .ok();
+        Text::new(
+            &wpm_buf,
+            Point::new(layout.center_x(3), layout.zone_center_y(1) - 4),
+            FONT_STYLE,
+        )
+        .draw(display)
+        .ok();
     }
 }
 
-/// Content column (16px): modifier icons in 2×2 grid.
-fn draw_content_col<D: DrawTarget<Color = BinaryColor>>(ctx: &RenderContext, display: &mut D, config: &SideConfig) {
+fn draw_content_col<D: DrawTarget<Color = BinaryColor>>(
+    ctx: &RenderContext,
+    display: &mut D,
+    config: &SideConfig,
+    layout: &Layout,
+) {
     if config.show_mods {
         let m = ctx.modifiers;
         let mods: [(&[u8; 8], bool); 4] = [
@@ -187,7 +253,8 @@ fn draw_content_col<D: DrawTarget<Color = BinaryColor>>(ctx: &RenderContext, dis
         let start_x = config.col_content_x() + (COL_W1 - total_w) / 2;
 
         let row_h = ICON_SZ + 4;
-        let y1 = 10;
+        let content_cy = layout.zone_center_y(2);
+        let y1 = content_cy - row_h / 2;
         let y2 = y1 + row_h;
 
         draw_mod_pair(display, &mods[..2], start_x, y1);
@@ -211,25 +278,34 @@ fn draw_mod_pair<D: DrawTarget<Color = BinaryColor>>(display: &mut D, mods: &[(&
     }
 }
 
-/// Footer column (8px): BLE indicator, lock dots, battery.
-fn draw_footer_col<D: DrawTarget<Color = BinaryColor>>(ctx: &RenderContext, display: &mut D, config: &SideConfig) {
+fn draw_footer_col<D: DrawTarget<Color = BinaryColor>>(
+    ctx: &RenderContext,
+    display: &mut D,
+    config: &SideConfig,
+    layout: &Layout,
+) {
     let cx = config.col_footer_x() + COL_W2 / 2;
 
     if config.show_ble {
-        draw_ble_indicator(ctx, display, cx);
+        draw_ble_indicator(ctx, display, cx, layout);
     }
     if config.show_locks {
         let lock_x = cx - LOCK_DOT_DIAMETER as i32 / 2;
-        draw_lock_dots(ctx, display, lock_x, 40);
+        draw_lock_dots(ctx, display, lock_x, layout.zone_center_y(3) - 4);
     }
     if config.show_battery {
-        draw_battery_icon(ctx.battery, display, config.col_footer_x());
+        draw_battery_icon(ctx.battery, display, config.col_footer_x(), layout);
     }
 }
 
-fn draw_ble_indicator<D: DrawTarget<Color = BinaryColor>>(ctx: &RenderContext, display: &mut D, cx: i32) {
+fn draw_ble_indicator<D: DrawTarget<Color = BinaryColor>>(
+    ctx: &RenderContext,
+    display: &mut D,
+    cx: i32,
+    layout: &Layout,
+) {
     let connected = is_connected(ctx);
-    let y = 8;
+    let y = layout.zone_center_y(3) - 4;
     let check_x = cx - 2;
     if connected {
         Line::new(Point::new(check_x, y + 2), Point::new(check_x + 2, y + 4))
@@ -267,7 +343,12 @@ fn draw_lock_dots<D: DrawTarget<Color = BinaryColor>>(ctx: &RenderContext, displ
     }
 }
 
-fn draw_battery_icon<D: DrawTarget<Color = BinaryColor>>(battery: BatteryStatusEvent, display: &mut D, col_x: i32) {
+fn draw_battery_icon<D: DrawTarget<Color = BinaryColor>>(
+    battery: BatteryStatusEvent,
+    display: &mut D,
+    col_x: i32,
+    layout: &Layout,
+) {
     const NUM_BARS: i32 = 6;
     const BODY_W: i32 = 5;
     const BODY_H: i32 = NUM_BARS + 2;
@@ -277,7 +358,7 @@ fn draw_battery_icon<D: DrawTarget<Color = BinaryColor>>(battery: BatteryStatusE
 
     let body_x = col_x + (COL_W2 - BODY_W) / 2;
     let nub_x = body_x + (BODY_W - NUB_W) / 2;
-    let top_y = 70;
+    let top_y = layout.zone_top(4) - BODY_H - 2;
     let body_y = top_y + NUB_H;
 
     Rectangle::new(Point::new(nub_x, top_y), Size::new(NUB_W as u32, NUB_H as u32))
@@ -313,14 +394,10 @@ fn is_connected(ctx: &RenderContext) -> bool {
 
 // --- Modifier icons (8x8 pixel bitmaps) ---
 
-/// Shift — upward arrow
 const SHIFT: [u8; 8] = [0x18, 0x3C, 0x7E, 0x18, 0x18, 0x18, 0x18, 0x00];
 
-/// Ctrl — chevron
 const CTRL: [u8; 8] = [0x00, 0x18, 0x3C, 0x66, 0xC3, 0x00, 0x00, 0x00];
 
-/// Alt — letter A
 const ALT: [u8; 8] = [0x18, 0x24, 0x42, 0x7E, 0x42, 0x42, 0x00, 0x00];
 
-/// GUI — four squares
 const GUI: [u8; 8] = [0x00, 0x6C, 0x6C, 0x00, 0x6C, 0x6C, 0x00, 0x00];
