@@ -26,6 +26,7 @@ enum Orientation {
     Portrait,
 }
 
+#[allow(dead_code)]
 struct Layout {
     orientation: Orientation,
     w: i32,
@@ -33,6 +34,7 @@ struct Layout {
     zones: [i32; 5],
 }
 
+#[allow(dead_code)]
 impl Layout {
     fn from_display<D: DrawTarget>(display: &D) -> Self {
         let bbox = display.bounding_box();
@@ -97,6 +99,7 @@ pub struct SideConfig {
     pub show_locks: bool,
 }
 
+#[allow(dead_code)]
 impl SideConfig {
     fn col_header_x(&self) -> i32 {
         match self.direction {
