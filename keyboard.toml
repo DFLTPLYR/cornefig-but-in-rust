@@ -279,7 +279,7 @@ adc_divider_total = 2806
 driver = "ssd1306"
 size = "128x32"
 rotation = 90
-renderer = "OledRenderer"
+renderer = "crate::column_layout::CentralLayout"
 
 [split.central.display.protocol.i2c]
 instance = "TWISPI0"
@@ -306,7 +306,7 @@ adc_divider_total = 2806
 driver = "ssd1306"
 size = "128x32"
 rotation = 90
-renderer = "OledRenderer"
+renderer = "crate::column_layout::PeripheralLayout"
 
 [split.peripheral.display.protocol.i2c]
 instance = "TWISPI0"
