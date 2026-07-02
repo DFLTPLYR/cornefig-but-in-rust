@@ -8,8 +8,7 @@ license = "MIT OR Apache-2.0"
 readme = "README.md"
 
 [dependencies]
-# Pin to the RMK revision that matches the embassy 0.10 / nrf-sdc stack below (same as upstream `nrf52840_ble_split` example).
-# Keep RMK default features enabled (same as before the Vial experiment). Vial unlock is handled with `[host] unlock_keys` in keyboard.toml.
+# Pin to the RMK revision that matches the embassy 0.11 / nrf-sdc stack below (same as upstream `nrf52840_ble_split` example).
 # For local firmware development, point at a patched checkout.
 # Before CI / publishing, switch back to:
 #   rmk = { git = "https://github.com/HaoboGu/rmk", rev = "b98204928e9a8532064ce99add1f6c4c554e08c9", features = [...] }
@@ -20,23 +19,23 @@ rmk = { path = "rmk/rmk", features = [
     "adafruit_bl",
     "ssd1306",
 ] }
-nrf-sdc = { git = "https://github.com/haobogu/nrf-sdc", rev = "ffe59a7aefaaa145a3d2474602f33387f80dcefa", features = [
+nrf-sdc = { git = "https://github.com/alexmoon/nrf-sdc", rev = "abe49d22ebfc85fae134eb082fbfddf752016a55", features = [
     "defmt",
     "peripheral",
     "central",
     "nrf52840",
 ] }
-nrf-mpsl = { git = "https://github.com/haobogu/nrf-sdc", rev = "ffe59a7aefaaa145a3d2474602f33387f80dcefa", features = [
+nrf-mpsl = { git = "https://github.com/alexmoon/nrf-sdc", rev = "abe49d22ebfc85fae134eb082fbfddf752016a55", features = [
     "defmt",
     "critical-section-impl",
     "nrf52840",
 ] }
-bt-hci = { version = "0.8", features = ["defmt"] }
+bt-hci = { version = "0.9", features = ["defmt"] }
 
 cortex-m = "0.7.7"
 cortex-m-rt = "0.7.5"
 embassy-time = { version = "0.5", features = ["tick-hz-32_768", "defmt", "defmt-timestamp-uptime"] }
-embassy-nrf = { version = "0.10", features = [
+embassy-nrf = { version = "0.11", features = [
     "defmt",
     "nrf52840",
     "time-driver-rtc1",
